@@ -158,3 +158,40 @@ Developer Program Policies certification, then Save Draft and Submit.
 - Tick the certification that data usage complies with the Developer Program Policies.
 - Remote-code justification is the highest-risk item in review; if rejected,
   the fix is to remove runtime execution of fetched player JS entirely.
+
+## 6 · Test instructions (reviewer form)
+
+No login/authentication exists, so the Username/Password fields stay empty.
+Paste the following into **Additional instructions**:
+
+```
+No login or setup required. The extension needs no account, no API key, and no configuration. Install it from this listing, pin it to the toolbar, and grant the permissions shown at install time.
+
+1) Single video download
+- Open any public YouTube video, click the toolbar icon to open the popup.
+- Paste the video URL (or just a video ID) and press Load.
+- Confirm the preview card shows title, channel, thumbnail and duration.
+- Pick a format (e.g. 720p MP4) and press Download.
+- Confirm Chrome's download manager receives the file and it plays locally.
+
+2) MP3 conversion
+- Load a video, choose "MP3 Audio (converted via FFmpeg)" and press Download.
+- Status shows "Transcoding MP3 via FFmpeg…", a progress bar advances, and an .mp3 lands in Chrome's Downloads. First conversion can take a few seconds while the FFmpeg WASM core loads.
+
+3) Playlist + batch
+- Paste a YouTube playlist URL and press Load; the card lists tracks with thumbnails.
+- Use Get on one track, or Download all to enqueue the whole playlist; the progress line shows "Batch downloading (n/total)".
+
+4) Save for later
+- With a video preview loaded press Save later (it turns red/"Saved").
+- Open the Saved tab, confirm the video is listed, and click the row to reopen it.
+
+5) History
+- After a download, open the History tab and confirm the entry shows title, format badge (MP4/MP3/WEBM) and relative time.
+- Use the trash icon on a row and Clear all to remove entries.
+
+Notes for the reviewer
+- MP3 conversion and all processing happen locally; the extension only contacts youtube.com and googlevideo.com endpoints.
+- If a download fails with "Video is unavailable or YouTube updated its extraction player", YouTube has changed its internals; a retry after a moment usually succeeds. This is a known limitation of YouTube downloaders, not a permissions defect.
+- No credentials, PII or user content is transmitted anywhere; test data lives only in local extension storage.
+```
