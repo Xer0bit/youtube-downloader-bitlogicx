@@ -31,25 +31,50 @@ stub and sample data.
 ### Description (paste into the dashboard)
 
 ```
-Bit Downloader adds a one-click download button for YouTube to your browser toolbar. Paste a video, Shorts or playlist link and preview every available quality — from 1080p/4K down to 360p — or grab a clean audio track. Convert any video to MP3 right in your browser with FFmpeg compiled to WebAssembly; the audio never leaves your machine.
+Bit Downloader
 
-WHAT YOU CAN DO
-• Download video in your preferred quality and container (MP4, WebM, M4A)
-• Convert to MP3 instantly, powered by local FFmpeg WASM
-• Load full playlists, browse every track and download them one by one
-• Batch-download an entire playlist in the background, one video after another
-• Save videos for later and pick up where you left off from the Saved tab
-• Keep a full download history with format badges — reopen or clean up anytime
-• Watch live progress on a slim bar that stays visible in every view
+Download YouTube videos, audio and whole playlists straight from your browser toolbar. Paste a link, pick a quality, done. No servers, no accounts, no watermarks: everything runs locally in your browser.
 
-A CLEAN, NATIVE FEEL
-A flat, Apple-inspired interface: grouped cards, a segmented control for Download / Saved / History, and quiet typography. No clutter, no ads, no upsells.
+Why you will like it
 
-PRIVATE BY DESIGN
-There is no server, no account, and no analytics. Streams are resolved and fetched directly through your browser, MP3 conversion runs locally, and your bookmarks and history stay in Chrome's own storage on your device. Only the network permissions required to fetch and save media are requested.
+- One-click downloads from any YouTube page, Shorts or playlist
+- Choose the quality you want: 4K, 1080p, 720p and below
+- Grab clean video (MP4, WebM) or audio-only files (M4A)
+- Convert any video to MP3 instantly with FFmpeg compiled to WebAssembly. The conversion happens on your device, so your audio never leaves your machine
+- Load full playlists, browse every track, and download them one by one
+- Send an entire playlist to a background batch queue and let it work through the list
+- Save videos for later and reopen them any time from the Saved tab
+- Automatic download history with format badges, so you can revisit or clean up past downloads
+- Live progress that stays visible no matter which view you are in
 
-NOTES
-YouTube frequently changes its internals; if a download stops working, an extension update usually fixes it. Please respect copyright and only download content you have the rights to save.
+Clean and native feel
+
+The popup uses a flat, Apple-inspired interface: grouped cards, a segmented control for Download / Saved / History, and quiet typography. No clutter, no ads, no upsells.
+
+Private by design
+
+- No server, no account, and no analytics
+- Media is fetched directly through your browser
+- MP3 conversion runs locally via FFmpeg WASM
+- Bookmarks, history and job state live only in Chrome's own local storage on your device
+- Only the network permissions needed to fetch and save media are requested, and they are explained in the permissions note below
+
+How to use
+
+1. Click the toolbar icon to open the popup
+2. Paste a YouTube video, Shorts or playlist link and press Load
+3. Choose a format or MP3 and press Download
+4. Optionally bookmark the video with Save later, and check the History tab to revisit past downloads
+
+Compatibility
+
+Works in Chrome and Chromium browsers on desktop. Manifest V3.
+
+Notes
+
+- Please respect copyright and only download content you have the rights to save. YouTube's Terms of Service may restrict downloading
+- YouTube changes its internal systems frequently. If a download stops working, an extension update usually resolves it
+- For support or feature requests, use the support URL on this listing
 ```
 
 ## 3 · Upload-ready media (already generated)
