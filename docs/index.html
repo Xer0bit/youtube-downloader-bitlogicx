@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bit Downloader — Download YouTube videos, audio & playlists</title>
+  <meta name="description" content="A fast, private browser extension for downloading YouTube videos in any quality, converting to MP3, and saving whole playlists. No servers, no accounts.">
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <!-- Replace these two links once the store item and repo are live. -->
+  <meta property="og:title" content="Bit Downloader">
+  <meta property="og:description" content="Download YouTube videos, audio and playlists straight from your browser toolbar.">
+  <meta property="og:image" content="assets/promo-marquee.png">
+  <style>
+    :root {
+      --ink: #17181c;
+      --ink-2: #5c5f6a;
+      --ink-3: #9a9da8;
+      --accent: #ff3b30;
+      --accent-deep: #d70015;
+      --accent-tint: #fff0ef;
+      --page: #ffffff;
+      --alt: #f6f7f9;
+      --line: #eceef1;
+      --radius: 16px;
+      --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+        "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--font); color: var(--ink); background: var(--page);
+      -webkit-font-smoothing: antialiased; line-height: 1.55; }
+    a { color: var(--accent-deep); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+    img { display: block; }
+
+    /* ---------- nav ---------- */
+    nav { position: sticky; top: 0; z-index: 20; background: rgba(255,255,255,.86);
+      backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+    nav .wrap { display: flex; align-items: center; gap: 8px; height: 58px; }
+    nav .logo { width: 26px; height: 26px; border-radius: 6px; }
+    nav .name { font-weight: 700; font-size: 15px; letter-spacing: -0.01em; margin-right: auto; }
+    nav a.link { color: var(--ink-2); font-weight: 500; font-size: 14px; margin-left: 20px; }
+    nav a.link:hover { color: var(--ink); text-decoration: none; }
+
+    /* ---------- hero ---------- */
+    .hero { padding: 72px 0 40px; background:
+      radial-gradient(760px 380px at 82% -10%, rgba(255,59,48,.10), transparent 60%),
+      radial-gradient(640px 360px at -6% 108%, rgba(0,122,255,.05), transparent 55%); }
+    .hero-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 48px; align-items: center; }
+    .badge { display: inline-flex; align-items: center; gap: 8px; background: var(--accent-tint);
+      color: var(--accent-deep); border: 1px solid #ffdcd8; border-radius: 99px;
+      font-size: 12.5px; font-weight: 600; padding: 6px 12px; }
+    h1 { font-size: 54px; line-height: 1.05; letter-spacing: -0.035em; font-weight: 800; margin: 18px 0 14px; }
+    h1 em { font-style: normal; color: var(--accent); }
+    .hero p.lead { font-size: 18px; color: var(--ink-2); max-width: 520px; }
+    .hero-cta { display: flex; flex-wrap: wrap; gap: 12px; margin: 28px 0 22px; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; height: 46px; padding: 0 22px;
+      border-radius: 12px; font-size: 15px; font-weight: 600; transition: transform .1s ease, background .15s ease; }
+    .btn:active { transform: scale(.98); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-deep); text-decoration: none; }
+    .btn-ghost { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+    .btn-ghost:hover { background: var(--alt); text-decoration: none; }
+    .btn svg { width: 16px; height: 16px; }
+    .hero .meta { font-size: 13px; color: var(--ink-3); display: flex; gap: 16px; flex-wrap: wrap; }
+    .hero .meta b { color: var(--ink-2); font-weight: 600; }
+
+    .hero-visual { position: relative; }
+    .shot-card { background: #fff; border: 1px solid var(--line); border-radius: 24px; overflow: hidden;
+      box-shadow: 0 30px 80px -20px rgba(20,20,30,.22); max-width: 460px; margin: 0 auto; }
+    .shot-card img { width: 100%; }
+    .float-chip { position: absolute; left: -14px; bottom: 34px; background: #17181c; color: #fff;
+      border-radius: 12px; padding: 10px 14px; font-size: 12.5px; font-weight: 600;
+      box-shadow: 0 16px 40px -10px rgba(0,0,0,.4); display: flex; gap: 10px; align-items: center; }
+    .float-chip svg { width: 16px; height: 16px; color: #ff6b61; }
+
+    /* ---------- marquee ---------- */
+    .marquee img { width: 100%; }
+
+    /* ---------- sections ---------- */
+    section.block { padding: 76px 0; }
+    .kicker { font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent-deep); }
+    h2 { font-size: 38px; letter-spacing: -0.03em; line-height: 1.1; margin: 8px 0 14px; font-weight: 800; }
+    .sub { font-size: 16px; color: var(--ink-2); max-width: 620px; }
+    section.alt { background: var(--alt); }
+
+    /* features */
+    .feat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 40px; }
+    .feat { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; }
+    .feat .ico { width: 40px; height: 40px; border-radius: 11px; background: var(--accent-tint); color: var(--accent-deep);
+      display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+    .feat .ico svg { width: 20px; height: 20px; }
+    .feat h3 { font-size: 15.5px; font-weight: 700; letter-spacing: -0.01em; }
+    .feat p { font-size: 13.5px; color: var(--ink-2); margin-top: 5px; }
+
+    /* screenshots gallery */
+    .gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 36px; }
+    .gallery figure { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+    .gallery img { width: 100%; }
+    .gallery figcaption { font-size: 13px; color: var(--ink-2); padding: 10px 14px; font-weight: 500; }
+
+    /* live demo */
+    .demo-shell { display: flex; gap: 30px; align-items: flex-start; margin-top: 40px; }
+    .demo-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .demo-buttons button { height: 34px; padding: 0 16px; border-radius: 9px; border: 1px solid var(--line);
+      background: #fff; color: var(--ink-2); font-weight: 600; font-size: 13px; cursor: pointer; transition: all .14s ease; }
+    .demo-buttons button:hover { color: var(--ink); background: var(--alt); }
+    .demo-buttons button.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+    .demo-frame { border-radius: 24px; overflow: hidden; box-shadow: 0 30px 90px -24px rgba(20,20,30,.35);
+      outline: 1px solid rgba(0,0,0,.05); background: #fff; width: max-content; max-width: 100%; }
+    .demo-frame iframe { display: block; border: 0; width: 424px; height: 560px; }
+    .demo-note { font-size: 13.5px; color: var(--ink-2); margin-top: 14px; max-width: 420px; }
+    .demo-note b { color: var(--ink); }
+
+    /* install */
+    .steps { counter-reset: step; display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 40px; }
+    .step { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; position: relative; }
+    .step::before { counter-increment: step; content: counter(step); width: 28px; height: 28px; border-radius: 50%;
+      background: var(--ink); color: #fff; font-weight: 700; font-size: 14px; display: flex; align-items: center;
+      justify-content: center; margin-bottom: 14px; }
+    .step h3 { font-size: 15px; font-weight: 700; }
+    .step p { font-size: 13.5px; color: var(--ink-2); margin-top: 5px; }
+    .step code { background: var(--alt); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px;
+      font-size: 12.5px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+    footer { border-top: 1px solid var(--line); padding: 40px 0 60px; }
+    .foot-flex { display: flex; justify-content: space-between; gap: 30px; flex-wrap: wrap; }
+    .foot-flex .brand2 { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+    .foot-flex .brand2 img { width: 26px; height: 26px; border-radius: 6px; }
+    .foot-flex ul { list-style: none; color: var(--ink-2); font-size: 13.5px; }
+    .foot-flex li { margin: 6px 0; }
+    .foot-flex li svg { width: 14px; height: 14px; vertical-align: -2px; margin-right: 8px; color: var(--ink-3); }
+    footer .disclaimer { margin-top: 30px; font-size: 12.5px; color: var(--ink-3); max-width: 760px; }
+
+    @media (max-width: 860px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      h1 { font-size: 40px; }
+      .feat-grid, .steps, .gallery { grid-template-columns: 1fr; }
+      .demo-shell { flex-direction: column; }
+      .float-chip { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============ Nav ============ -->
+  <nav>
+    <div class="wrap">
+      <img class="logo" src="assets/logo.png" alt="Bit Downloader">
+      <span class="name">Bit Downloader</span>
+      <a class="link" href="#features">Features</a>
+      <a class="link" href="#screens">Screens</a>
+      <a class="link" href="#demo">Live demo</a>
+      <a class="link" href="#install">Install</a>
+      <a class="link" href="#faq">FAQ</a>
+    </div>
+  </nav>
+
+  <!-- ============ Hero ============ -->
+  <header class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="badge">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          Manifest V3 · Private &amp; local
+        </span>
+        <h1>Download YouTube.<br><em>Stay in your browser.</em></h1>
+        <p class="lead">Bit Downloader is a fast browser extension for grabbing videos in any quality, converting audio to MP3, and saving whole playlists. Everything runs locally — no servers, no accounts, no watermarks.</p>
+        <div class="hero-cta">
+          <!-- Replace # with your live Chrome Web Store URL after publishing. -->
+          <a class="btn btn-primary" href="#">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Add to Chrome
+          </a>
+          <a class="btn btn-ghost" href="https://github.com/Xer0bit/youtube-downloader-bitlogicx">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+            View source
+          </a>
+        </div>
+        <div class="meta">
+          <span><b>4K · 1080p · 720p</b> &nbsp;formats</span>
+          <span><b>MP3 · M4A · WebM</b> &nbsp;audio</span>
+          <span><b>Playlists</b> &nbsp;&amp; batch</span>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="shot-card">
+          <img src="assets/screen-video.png" alt="Bit Downloader popup showing a video ready to download">
+        </div>
+        <div class="float-chip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16 10,8"/></svg>
+          MP3 converted locally · no uploads
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="marquee"><img src="assets/promo-marquee.png" alt="Bit Downloader marquee"></div>
+
+  <!-- ============ Features ============ -->
+  <section class="block" id="features">
+    <div class="wrap">
+      <div class="kicker">Features</div>
+      <h2>Everything a downloader should be</h2>
+      <p class="sub">Clean, focused, and fast. Built as a Manifest V3 extension with a restrained, native-feeling UI.</p>
+      <div class="feat-grid">
+        <div class="feat">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="3"/><polyline points="10 9 15 12 10 15"/></svg></div>
+          <h3>Any quality, any container</h3>
+          <p>Pick 4K down to 360p, or a clean audio track. MP4, WebM and M4A containers with one-click MP3 conversion via in-page FFmpeg WASM.</p>
+        </div>
+        <div class="feat">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
+          <h3>Playlists &amp; batches</h3>
+          <p>Drop a playlist link, browse every track, download individually, or send the whole list to a background batch queue.</p>
+        </div>
+        <div class="feat">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
+          <h3>Save for later</h3>
+          <p>Bookmark videos you want to revisit and reopen them any time from the Saved tab, even after closing the popup.</p>
+        </div>
+        <div class="feat">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg></div>
+          <h3>Download history</h3>
+          <p>Every download is recorded with its format and time. Reopen the video or clear the log whenever you like.</p>
+        </div>
+        <div class="feat">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
+          <h3>Private by design</h3>
+          <p>No backend, no analytics, no account. Streams are fetched and transcoded on your machine; state lives only in local browser storage.</p>
+        </div>
+        <div class="feat">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <h3>Live progress</h3>
+          <p>A thin progress bar and status stay visible no matter which tab of the popup you are on, so a running download never hides.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Screens ============ -->
+  <section class="block alt" id="screens">
+    <div class="wrap">
+      <div class="kicker">Gallery</div>
+      <h2>See it in action</h2>
+      <p class="sub">The popup keeps a flat, Apple-inspired design: grouped cards, a segmented control, and hairline separators.</p>
+      <div class="gallery">
+        <figure><img src="assets/screen-video.png" alt="Video preview with quality selector"><figcaption>Video preview with quality &amp; MP3 options</figcaption></figure>
+        <figure><img src="assets/screen-playlist.png" alt="Playlist view with per-track controls"><figcaption>Playlists with per-track controls</figcaption></figure>
+        <figure><img src="assets/screen-saved.png" alt="Saved for later list"><figcaption>Save videos for later</figcaption></figure>
+        <figure><img src="assets/screen-history.png" alt="Download history list"><figcaption>Full download history with format badges</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Live demo ============ -->
+  <section class="block" id="demo">
+    <div class="wrap">
+      <div class="kicker">Live demo</div>
+      <h2>Try the popup right here</h2>
+      <p class="sub">This is the actual extension UI running against sample data. No downloads will start.</p>
+      <div class="demo-shell">
+        <div>
+          <div class="demo-buttons">
+            <button class="on" data-state="video">Video</button>
+            <button data-state="playlist">Playlist</button>
+            <button data-state="saved">Saved</button>
+            <button data-state="history">History</button>
+          </div>
+          <div class="demo-frame">
+            <iframe id="live" src="demo/popup.html?state=video" title="Interactive Bit Downloader demo" loading="lazy"></iframe>
+          </div>
+          <p class="demo-note"><b>Tip:</b> click through the tabs above. In the video view, type any URL and press Load — you will get a sample video back so you can feel the flow.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Install ============ -->
+  <section class="block alt" id="install">
+    <div class="wrap">
+      <div class="kicker">Install</div>
+      <h2>Up and running in a minute</h2>
+      <p class="sub">The easiest path is the Chrome Web Store. Prefer to run from source? Three steps:</p>
+      <div class="steps">
+        <div class="step">
+          <h3>Clone &amp; build</h3>
+          <p><code>git clone</code> this repo, then <code>npm install</code> and <code>npm run build</code>. Node 20.19+ required.</p>
+        </div>
+        <div class="step">
+          <h3>Load unpacked</h3>
+          <p>Open <code>chrome://extensions</code>, enable <b>Developer mode</b>, and choose <code>Load unpacked</code> on the <code>dist/</code> folder.</p>
+        </div>
+        <div class="step">
+          <h3>Pin it</h3>
+          <p>Click the puzzle icon in your toolbar, pin Bit Downloader, and paste a YouTube link to go.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FAQ ============ -->
+  <section class="block" id="faq">
+    <div class="wrap">
+      <div class="kicker">FAQ</div>
+      <h2>Questions</h2>
+      <div class="faq" style="margin-top:28px;display:grid;gap:14px;max-width:760px;">
+        <div style="background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;">
+          <h3 style="font-size:15px;font-weight:700;">Is this legal? / ToS?</h3>
+          <p style="font-size:13.5px;color:var(--ink-2);margin-top:4px;">Downloading may violate YouTube’s Terms of Service. Please only save content you have rights to, and respect platform rules. The tool is provided for personal archival and research.</p>
+        </div>
+        <div style="background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;">
+          <h3 style="font-size:15px;font-weight:700;">Where do downloads go?</h3>
+          <p style="font-size:13.5px;color:var(--ink-2);margin-top:4px;">Straight to Chrome’s Downloads using its built-in manager — no custom folders, no hidden storage.</p>
+        </div>
+        <div style="background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;">
+          <h3 style="font-size:15px;font-weight:700;">Why did a download stop working?</h3>
+          <p style="font-size:13.5px;color:var(--ink-2);margin-top:4px;">YouTube changes its internals without notice. If resolution breaks, updates are typically needed; that is true of every YouTube downloader. History and bookmarks survive restarts and updates.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Footer ============ -->
+  <footer>
+    <div class="wrap foot-flex">
+      <div class="brand2"><img src="assets/logo.png" alt=""><span>Bit Downloader</span></div>
+      <ul>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>No telemetry · no analytics · local only</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>FFmpeg WASM, executed on-device</li>
+      </ul>
+    </div>
+    <div class="wrap disclaimer">Not affiliated with, endorsed by, or sponsored by YouTube or Google. YouTube is a trademark of Google LLC. Use responsibly and respect copyright.</div>
+  </footer>
+
+  <script>
+    // Interactive demo tab switcher.
+    (function () {
+      var frame = document.getElementById("live");
+      var buttons = document.querySelectorAll(".demo-buttons button");
+      buttons.forEach(function (b) {
+        b.addEventListener("click", function () {
+          buttons.forEach(function (x) { x.classList.remove("on"); });
+          b.classList.add("on");
+          frame.src = "demo/popup.html?state=" + b.dataset.state;
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

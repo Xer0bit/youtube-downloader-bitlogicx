@@ -4,3 +4,7 @@ dist/
 *.log
 .DS_Store
 _metadata/
+
+# Never commit: the CRX signing key controls your extension ID.
+keys/
+release/
