@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bit Downloader</title>
+  <style>
+    /* Apple-inspired UI.
+       - Light gray canvas with white "grouped" surfaces (iOS Settings feel)
+       - SF-style system type, hairline separators, soft unblurred shadows
+       - Buttons: filled accent (primary), tinted accent (secondary-highlight),
+         neutral gray (secondary), plain red text (destructive)
+       - Accent follows Apple red (#ff3b30 family) which matches the logo.
+    */
+    :root {
+      --page: #f2f2f4;
+      --surface: #ffffff;
+      --surface-2: #f5f5f7;
+      --separator: rgba(60, 60, 67, 0.12);
+      --separator-strong: rgba(60, 60, 67, 0.24);
+      --label: #1d1d1f;
+      --label-2: #6e6e73;
+      --label-3: #aeaeb2;
+      --accent: #ff3b30;
+      --accent-deep: #d70015;
+      --accent-tint: rgba(255, 59, 48, 0.1);
+      --accent-strong-tint: rgba(255, 59, 48, 0.16);
+      --danger: #d70015;
+      --ok: #1e9e4a;
+      --ok-tint: rgba(30, 158, 74, 0.1);
+      --fill: #f5f5f7;                 /* input / segment track */
+      --hairline: rgba(60, 60, 67, 0.08);
+      --radius-lg: 16px;
+      --radius: 12px;
+      --radius-sm: 9px;
+      --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 0 0 0.5px rgba(0, 0, 0, 0.02);
+      --shadow-thumb: 0 1.5px 4px rgba(0, 0, 0, 0.12);
+      --ring: 0 0 0 3.5px var(--accent-tint);
+      --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+        "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scrollbar-color: #c7c7cc transparent; }
+
+    body {
+      width: 424px;
+      background: var(--page);
+      color: var(--label);
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 1.4;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      padding: 14px 14px 12px;
+      max-height: 600px;
+    }
+
+    button { font-family: inherit; cursor: pointer; }
+    input, select { font-family: inherit; }
+    svg { display: block; }
+
+    /* SF-symbols style: slim rounded strokes on all outline icons */
+    svg[viewBox] { stroke-width: 1.7; }
+
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: none;
+      box-shadow: var(--ring);
+    }
+
+    /* ============ header ============ */
+    .top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 2px 2px 10px;
+    }
+
+    .brand { display: flex; align-items: center; gap: 10px; }
+
+    .logo { width: 34px; height: 34px; object-fit: contain; border-radius: 8px; }
+
+    .brand h1 { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.25; }
+    .brand .tagline { font-size: 11px; color: var(--label-2); margin-top: 1px; }
+
+    #popout-btn.popout-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      border-radius: 50%;
+      border: none;
+      background: var(--fill);
+      color: var(--label-2);
+      transition: background .18s var(--ease), color .18s var(--ease);
+    }
+    #popout-btn.popout-btn:hover { background: #e9e9ec; color: var(--label); }
+    #popout-btn svg { width: 15px; height: 15px; }
+    #popout-btn span { display: none; }
+
+    /* ============ segmented control (tabs) ============ */
+    .tabs {
+      display: flex;
+      gap: 3px;
+      background: #e5e5ea;
+      border-radius: 11px;
+      padding: 3px;
+      margin-bottom: 12px;
+    }
+
+    .tab {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      height: 30px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--label-2);
+      font-size: 12px;
+      font-weight: 500;
+      transition: background .22s var(--ease), color .22s var(--ease), box-shadow .22s var(--ease);
+    }
+    .tab:hover { color: var(--label); }
+    .tab svg { width: 13px; height: 13px; }
+    .tab.active {
+      background: #fff;
+      color: var(--label);
+      font-weight: 600;
+      box-shadow: var(--shadow-thumb), 0 0 0 0.5px rgba(0, 0, 0, 0.03);
+    }
+    .tab.active svg { color: var(--accent); }
+
+    .tab .count {
+      display: none;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 5px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 99px;
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .tab .count.has { display: inline-flex; }
+    .tab:not(.active) .count { background: rgba(0, 0, 0, 0.08); color: var(--label-2); }
+    .tab.active .count { background: var(--accent-tint); color: var(--accent-deep); }
+
+    /* ============ global status + progress ============ */
+    #status {
+      display: none;
+      align-items: flex-start;
+      gap: 7px;
+      font-size: 12.5px;
+      font-weight: 500;
+      line-height: 1.45;
+      color: var(--label-2);
+      padding: 8px 11px;
+      border-radius: var(--radius);
+      margin-bottom: 9px;
+    }
+    #status:not(:empty) { display: flex; }
+    #status.error { color: var(--danger); background: var(--accent-tint); }
+    #status.success { color: var(--ok); background: var(--ok-tint); }
+
+    #progress-container {
+      display: none;
+      height: 4px;
+      background: rgba(60, 60, 67, 0.1);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+    #progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width .22s var(--ease);
+    }
+
+    /* ============ views ============ */
+    .view { display: none; }
+    .view.active { display: block; animation: view-in .18s var(--ease); }
+    @keyframes view-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+
+    /* ============ download: input ============ */
+    .url-row { display: flex; gap: 8px; margin-bottom: 12px; }
+
+    .url-shell {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      height: 40px;
+      border-radius: var(--radius);
+      background: #fff;
+      box-shadow: var(--shadow-card);
+      transition: box-shadow .2s var(--ease);
+    }
+    .url-shell:focus-within { box-shadow: var(--ring); }
+    .url-shell .ico { padding-left: 13px; color: var(--label-3); display: flex; }
+    .url-shell .ico svg { width: 15px; height: 15px; }
+
+    .url-input {
+      flex: 1;
+      min-width: 0;
+      height: 100%;
+      background: transparent;
+      border: none;
+      color: var(--label);
+      font-size: 13.5px;
+      padding: 0 12px 0 8px;
+      caret-color: var(--accent);
+    }
+    .url-input::placeholder { color: var(--label-3); }
+    .url-input:focus-visible { box-shadow: none; }
+
+    /* filled primary */
+    #load-btn.load-btn {
+      flex-shrink: 0;
+      height: 40px;
+      padding: 0 20px;
+      border: none;
+      border-radius: var(--radius);
+      background: var(--accent);
+      color: #fff;
+      font-size: 13.5px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      transition: background .18s var(--ease), transform .1s var(--ease);
+    }
+    #load-btn.load-btn:hover { background: var(--accent-deep); }
+    #load-btn.load-btn:active { transform: scale(0.97); }
+
+    #loading {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      padding: 20px 0 22px;
+      font-size: 13px;
+      color: var(--label-2);
+    }
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #e3e3e6;
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #empty-state {
+      display: block;
+      text-align: center;
+      color: var(--label-2);
+      font-size: 12.5px;
+      line-height: 1.5;
+      padding: 22px 24px;
+      background: #fff;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      margin-bottom: 0;
+    }
+    #empty-state .hint-ico {
+      width: 46px;
+      height: 46px;
+      margin: 0 auto 10px;
+      border-radius: 50%;
+      background: var(--fill);
+      color: var(--label-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #empty-state .hint-ico svg { width: 18px; height: 18px; }
+
+    /* ============ grouped cards ============ */
+    .card {
+      background: #fff;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    #preview-card.preview-card { display: none; flex-direction: column; }
+    #preview-card.preview-card.visible { display: flex; }
+    .preview-card { display: none; }
+
+    .thumb-wrap { position: relative; background: #f5f5f7; }
+    .thumb-img { display: block; width: 100%; height: 176px; object-fit: cover; background: #ededf0; }
+    .duration-badge {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      background: rgba(20, 20, 22, 0.75);
+      backdrop-filter: blur(6px);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      padding: 3px 7px;
+      border-radius: 6px;
+    }
+
+    .video-body {
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      padding: 13px 13px 14px;
+      border-top: 1px solid var(--separator);
+    }
+    .video-title { font-size: 14px; font-weight: 600; line-height: 1.35; letter-spacing: -0.01em; }
+    .author-name { font-size: 12px; color: var(--label-2); margin-top: 3px; }
+
+    .field-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--label-2);
+      margin-bottom: 6px;
+    }
+    .format-select {
+      width: 100%;
+      height: 38px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: var(--fill);
+      color: var(--label);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 0 30px 0 12px;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%238E8E93' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 11px center;
+      transition: background-color .18s var(--ease);
+    }
+    .format-select:hover { background-color: #ececef; }
+    .format-select option, .format-select optgroup { color: var(--label); background: #fff; }
+
+    .actions-row { display: flex; gap: 8px; margin-top: 2px; }
+
+    #download-btn.download-now {
+      flex: 1;
+      height: 40px;
+      border: none;
+      border-radius: var(--radius);
+      background: var(--accent);
+      color: #fff;
+      font-size: 13.5px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      transition: background .18s var(--ease), transform .1s var(--ease);
+    }
+    #download-btn.download-now:hover { background: var(--accent-deep); }
+    #download-btn.download-now:active { transform: scale(0.98); }
+    #download-btn svg { width: 15px; height: 15px; }
+
+    /* neutral secondary */
+    #save-btn.save-btn {
+      flex-shrink: 0;
+      height: 40px;
+      padding: 0 15px;
+      border: none;
+      border-radius: var(--radius);
+      background: var(--fill);
+      color: var(--label);
+      font-size: 13px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all .18s var(--ease);
+    }
+    #save-btn.save-btn:hover { background: #e9e9ec; }
+    #save-btn svg { width: 15px; height: 15px; color: var(--label-2); transition: all .18s var(--ease); }
+    #save-btn.saved { background: var(--accent); color: #fff; }
+    #save-btn.saved:hover { background: var(--accent-deep); }
+    #save-btn.saved svg { color: #fff; }
+    #save-btn.pop { animation: pop .3s var(--ease); }
+    @keyframes pop { 0% { transform: scale(1);} 45% { transform: scale(1.08);} 100% { transform: scale(1);} }
+
+    /* playlist card */
+    #playlist-card.playlist-card { display: none; flex-direction: column; }
+    #playlist-card.playlist-card.visible { display: flex; }
+
+    .playlist-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 13px;
+      border-bottom: 1px solid var(--separator);
+    }
+    .playlist-title { font-size: 13.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .playlist-count { font-size: 11px; font-weight: 600; color: var(--accent-deep); background: var(--accent-tint); padding: 2.5px 9px; border-radius: 99px; flex-shrink: 0; }
+
+    #track-list.track-list { max-height: 204px; overflow-y: auto; }
+    #track-list::-webkit-scrollbar { width: 8px; }
+    #track-list::-webkit-scrollbar-thumb { background: #d1d1d6; border-radius: 8px; border: 2px solid #fff; background-clip: content-box; }
+
+    .track-item-card { display: flex; align-items: center; gap: 10px; padding: 8px 13px; }
+    .track-item-card + .track-item-card { border-top: 1px solid var(--separator); }
+    .track-item-card:hover { background: var(--surface-2); }
+    .track-top { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+    .track-thumb { width: 76px; height: 44px; border-radius: 7px; object-fit: cover; background: #e9e9ec; flex-shrink: 0; }
+    .track-details { flex: 1; min-width: 0; }
+    .track-title { font-size: 12.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .track-btns { display: flex; gap: 6px; flex-shrink: 0; }
+
+    .btn-sm {
+      height: 28px;
+      border: none;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 0 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all .15s var(--ease);
+    }
+    .btn-sm svg { width: 12px; height: 12px; }
+    .btn-sm:active { transform: scale(0.96); }
+    .btn-outline { background: var(--fill); color: var(--label); }
+    .btn-outline:hover { background: #e9e9ec; }
+    /* tinted accent (Apple tinted button) */
+    .btn-action { background: var(--accent-tint); color: var(--accent-deep); font-weight: 600; }
+    .btn-action:hover { background: var(--accent-strong-tint); }
+
+    .playlist-foot { padding: 10px 12px; border-top: 1px solid var(--separator); }
+    #batch-download-btn.batch-btn {
+      width: 100%;
+      height: 36px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: var(--accent-tint);
+      color: var(--accent-deep);
+      font-size: 12.5px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      transition: background .15s var(--ease);
+    }
+    #batch-download-btn.batch-btn:hover { background: var(--accent-strong-tint); }
+    #batch-download-btn svg { width: 13px; height: 13px; }
+
+    /* ============ library views ============ */
+    .lib-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 3px 7px;
+    }
+    .lib-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      color: var(--label-2);
+      text-transform: uppercase;
+    }
+    .link-btn {
+      background: none;
+      border: none;
+      color: var(--danger);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 3px 5px;
+      border-radius: 6px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .15s var(--ease);
+    }
+    .lib-head.has-items .link-btn { opacity: 1; pointer-events: auto; }
+    .link-btn:hover { text-decoration: underline; }
+
+    /* grouped list surfaces */
+    #saved-list, #history-list {
+      background: #fff;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+      max-height: 408px;
+      overflow-y: auto;
+    }
+
+    .lib-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 8px 12px;
+      background: transparent;
+      border: none;
+      text-align: left;
+      color: var(--label);
+      transition: background .14s var(--ease);
+    }
+    .lib-row + .lib-row { border-top: 1px solid var(--separator); }
+    .lib-row:hover { background: var(--surface-2); }
+    .lib-thumb { width: 82px; height: 47px; border-radius: 7px; object-fit: cover; background: #ededf0; flex-shrink: 0; }
+    .lib-mid { flex: 1; min-width: 0; }
+    .lib-name { font-size: 12.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .lib-sub {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 3px;
+      font-size: 11px;
+      color: var(--label-2);
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .ext {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      padding: 1.5px 5px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+    .ext.mp3 { color: var(--accent-deep); background: var(--accent-tint); }
+    .ext.other { color: #0062cc; background: rgba(0, 122, 255, 0.1); }
+
+    .lib-actions { display: flex; gap: 4px; flex-shrink: 0; }
+    .icon-btn {
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: 50%;
+      background: transparent;
+      color: var(--label-2);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .15s var(--ease);
+    }
+    .icon-btn:hover { background: var(--fill); color: var(--label); }
+    .icon-btn.go:hover { color: #0062cc; background: rgba(0, 122, 255, 0.12); }
+    .icon-btn.del:hover { color: var(--danger); background: var(--accent-tint); }
+    .icon-btn svg { width: 15px; height: 15px; }
+
+    .lib-empty {
+      background: #fff;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      text-align: center;
+      color: var(--label-2);
+      font-size: 12.5px;
+      line-height: 1.5;
+      padding: 26px 20px;
+    }
+    .lib-empty .lib-ico {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto 9px;
+      border-radius: 50%;
+      background: var(--fill);
+      color: var(--label-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .lib-empty .lib-ico svg { width: 17px; height: 17px; }
+  </style>
+  <script type="module" crossorigin src="/popup.bundle.js"></script>
+</head>
+<body>
+
+  <!-- ============ Header ============ -->
+  <header class="top">
+    <div class="brand">
+      <img class="logo" src="/icons/logo-yt-downloader.png" alt="">
+      <div>
+        <h1>Bit Downloader</h1>
+        <div class="tagline">Videos · Audio · Playlists</div>
+      </div>
+    </div>
+    <button id="popout-btn" class="popout-btn" title="Open in a full browser tab" aria-label="Open in a tab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+    </button>
+  </header>
+
+  <!-- ============ Segmented control ============ -->
+  <nav class="tabs" role="tablist">
+    <button id="tab-download" class="tab active" data-view="download" role="tab" aria-selected="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Download
+    </button>
+    <button id="tab-saved" class="tab" data-view="saved" role="tab" aria-selected="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+      Saved
+      <span id="count-saved" class="count"></span>
+    </button>
+    <button id="tab-history" class="tab" data-view="history" role="tab" aria-selected="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg>
+      History
+      <span id="count-history" class="count"></span>
+    </button>
+  </nav>
+
+  <!-- ============ Status / progress (global) ============ -->
+  <div id="status"></div>
+  <div id="progress-container"><div id="progress-fill"></div></div>
+
+  <!-- ============ View: Download ============ -->
+  <section id="view-download" class="view active">
+
+    <div class="url-row">
+      <div class="url-shell">
+        <span class="ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        </span>
+        <input type="text" id="url" class="url-input"
+               placeholder="YouTube link or playlist"
+               autocomplete="off" spellcheck="false" autofocus>
+      </div>
+      <button id="load-btn" class="load-btn">Load</button>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading">
+      <div class="spinner"></div>
+      <span>Contacting YouTube…</span>
+    </div>
+
+    <!-- Hint / empty -->
+    <div id="empty-state">
+      <div class="hint-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polygon points="6,3 20,12 6,21 6,3"/></svg>
+      </div>
+      Paste a link to preview quality options, download the video, or convert audio to MP3.
+    </div>
+
+    <!-- Video preview -->
+    <section id="preview-card" class="card preview-card">
+      <div class="thumb-wrap">
+        <img id="thumb-img" class="thumb-img" alt="">
+        <div id="duration-badge" class="duration-badge">00:00</div>
+      </div>
+      <div class="video-body">
+        <div>
+          <div id="video-title" class="video-title">Video title</div>
+          <div id="video-author" class="author-name"></div>
+        </div>
+        <div>
+          <div class="field-label">Format</div>
+          <select id="format-select" class="format-select"></select>
+        </div>
+        <div class="actions-row">
+          <button id="download-btn" class="download-now">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download
+          </button>
+          <button id="save-btn" class="save-btn" title="Save for later">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+            <span id="save-btn-label">Save later</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Playlist -->
+    <section id="playlist-card" class="card playlist-card">
+      <div class="playlist-head">
+        <div id="playlist-title" class="playlist-title">Playlist</div>
+        <div id="playlist-count" class="playlist-count">0 videos</div>
+      </div>
+      <div id="track-list" class="track-list"></div>
+      <div class="playlist-foot">
+        <button id="batch-download-btn" class="batch-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Download all
+        </button>
+      </div>
+    </section>
+  </section>
+
+  <!-- ============ View: Saved ============ -->
+  <section id="view-saved" class="view" hidden>
+    <div class="lib-head" id="saved-head">
+      <div class="lib-title">Saved for later</div>
+    </div>
+    <div id="saved-list" class="saved-list"></div>
+    <div id="saved-empty" class="lib-empty saved" hidden>
+      <div class="lib-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      Nothing saved yet. Open a video and press “Save later”.
+    </div>
+  </section>
+
+  <!-- ============ View: History ============ -->
+  <section id="view-history" class="view" hidden>
+    <div class="lib-head has-items" id="history-head">
+      <div class="lib-title">Download history</div>
+      <button id="clear-history" class="link-btn">Clear all</button>
+    </div>
+    <div id="history-list"></div>
+    <div id="history-empty" class="lib-empty" hidden>
+      <div class="lib-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg>
+      </div>
+      Nothing here yet. Downloads you start will show up automatically.
+    </div>
+  </section>
+
+</body>
+</html>

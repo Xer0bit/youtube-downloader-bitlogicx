@@ -1,0 +1,21 @@
+{
+  "name": "youtube-downloader-extension",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Source project for the 'YouTube & Media Downloader' Manifest V3 extension. Run `npm run build`; the result in dist/ is what you load unpacked in chrome://extensions.",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "build": "vite build",
+    "watch": "vite build --watch",
+    "typecheck": "tsc --noEmit",
+    "icons": "node scripts/gen-icons.mjs"
+  },
+  "devDependencies": {
+    "@types/chrome": "0.2.9",
+    "typescript": "5.9.3",
+    "vite": "7.3.6"
+  }
+}
