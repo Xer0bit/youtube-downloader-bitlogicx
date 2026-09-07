@@ -3,23 +3,19 @@
 ## 1 · Publish the landing page (GitHub Pages)
 
 The site lives in this `docs/` folder (root: `docs/index.html`, with the
-interactive demo at `docs/demo/popup.html`).
+interactive demo at `docs/demo/popup.html`). It is **live** at:
 
-1. Push this repository to GitHub.
-2. In the repo: **Settings → Pages → Source → Deploy from a branch**.
-3. Branch `main`, folder `/docs` → **Save**.
+**https://xer0bit.github.io/youtube-downloader-bitlogicx/**
 
-The site is then live at `https://<user>.github.io/<repo>/`.
+Repo: https://github.com/Xer0bit/youtube-downloader-bitlogicx (public,
+Pages enabled from `/docs` on `main`, description + topics + homepage set).
 
-Replace the two placeholder links in `docs/index.html` once they exist:
-search for `Add to Chrome` and `View source` (the `<a class="btn …" href="#">`).
+To update the site after changes: `npm run build` (if UI changed),
+`node scripts/build-demo.mjs`, then commit and push `main`. Pages rebuilds
+in ~1 minute.
 
 The demo (`docs/demo/popup.html`) is the real popup markup with a `chrome.*`
-stub and sample data. Regenerate it after changing the real popup:
-
-```
-node scripts/build-demo.mjs
-```
+stub and sample data.
 
 ## 2 · Store listing copy
 
@@ -29,8 +25,8 @@ node scripts/build-demo.mjs
 | Summary (from package description) | Download YouTube videos, audio and playlists straight from your browser toolbar. |
 | Category | Productivity (or Accessibility? — pick **Productivity**) |
 | Language | English (United States) |
-| Official URL / Homepage | Your GitHub Pages URL from step 1 |
-| Support URL | Your GitHub repo URL |
+| Official URL / Homepage | https://xer0bit.github.io/youtube-downloader-bitlogicx/ |
+| Support URL | https://github.com/Xer0bit/youtube-downloader-bitlogicx |
 
 ### Description (paste into the dashboard)
 
