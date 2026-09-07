@@ -117,3 +117,44 @@ Serve the repo root over HTTP while rendering — `python3 -m http.server 8393`.
 
 Privacy practice: single purpose = download media from YouTube for the user;
 no user data is collected, transmitted, or sold.
+
+## 5 · Privacy practices tab — copy-paste answers (publish blockers)
+
+Paste these in the **Privacy practices** tab of the item page, tick the
+Developer Program Policies certification, then Save Draft and Submit.
+
+**Single purpose description**
+
+> Download YouTube videos and playlists to the user's own device, including MP3 conversion, all processed locally in the browser.
+
+**Justification for declarativeNetRequest**
+
+> MV3 forbids extensions from setting the Origin/Referer headers on fetch() requests. This extension uses one static DNR ruleset to rewrite those two headers to https://www.youtube.com only on requests to youtube.com/youtubei/* and googlevideo.com/videoplayback* media endpoints, so YouTube serves the requested stream. Rules are static, fixed at install, and match only YouTube domains.
+
+**Justification for downloads**
+
+> Saves the downloaded video/audio file through Chrome's built-in download manager. A download starts only after the user explicitly clicks Download on a resolved video.
+
+**Justification for host permissions**
+
+> Required to resolve video metadata and stream URLs and to allow the static DNR header rewrite on media endpoints. Network access happens only when the user pastes a link and requests a download.
+
+**Justification for offscreen**
+
+> MV3 has no DOM/Worker context in the service worker. The offscreen document hosts the FFmpeg WASM worker used for MP3 conversion and the sandboxed iframe that executes YouTube's player code (see remote-code justification). It is created lazily per download and closed when idle.
+
+**Justification for storage**
+
+> Stores only the user's own data locally: "Saved for later" bookmarks, download history, and in-progress job state so downloads survive service-worker restarts. Nothing stored is transmitted anywhere.
+
+**Justification for remote code use**
+
+> YouTube signs its media URLs with an obfuscated JavaScript algorithm fetched from YouTube's own player endpoint. To decipher a stream URL for a video the user requested, this code must be executed. It runs only inside a dedicated sandboxed iframe whose CSP explicitly allows unsafe-eval (extension pages themselves never use it), executes only code fetched from YouTube's player, only on demand, and never executes third-party or developer-hosted code.
+
+**Also required (outside Privacy tab)**
+
+- Settings page: add a publisher contact email and verify it (Google emails a
+  verification link). Publishing stays blocked until the email is verified.
+- Tick the certification that data usage complies with the Developer Program Policies.
+- Remote-code justification is the highest-risk item in review; if rejected,
+  the fix is to remove runtime execution of fetched player JS entirely.
