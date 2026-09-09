@@ -1,5 +1,10 @@
 # GitHub Pages site & Chrome Web Store kit
 
+> **Update (2026-09-09):** the Chrome Web Store rejected this category (YouTube
+> media downloaders, "Blue Zinc" violation). Distribution is now **self-hosted
+> via GitHub Release v1.0.1**; the store kit below is kept for reference only.
+> Install links on the landing page point at the release assets.
+
 ## 1 · Publish the landing page (GitHub Pages)
 
 The site lives in this `docs/` folder (root: `docs/index.html`, with the
@@ -9,6 +14,9 @@ interactive demo at `docs/demo/popup.html`). It is **live** at:
 
 Repo: https://github.com/Xer0bit/youtube-downloader-bitlogicx (public,
 Pages enabled from `/docs` on `main`, description + topics + homepage set).
+
+Distribution release: https://github.com/Xer0bit/youtube-downloader-bitlogicx/releases/tag/v1.0.1
+(.zip for Load-unpacked installs, .crx for dev-mode drag-and-drop).
 
 To update the site after changes: `npm run build` (if UI changed),
 `node scripts/build-demo.mjs`, then commit and push `main`. Pages rebuilds
