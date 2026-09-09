@@ -141,7 +141,7 @@ Developer Program Policies certification, then Save Draft and Submit.
 
 **Justification for offscreen**
 
-> MV3 has no DOM/Worker context in the service worker. The offscreen document hosts the FFmpeg WASM worker used for MP3 conversion and the sandboxed iframe that executes YouTube's player code (see remote-code justification). It is created lazily per download and closed when idle.
+> MV3 has no DOM/Worker context in the service worker. The offscreen document hosts the FFmpeg WASM worker used for MP3 conversion and the stream-fetching fallback. It is created lazily per download and closed when idle. No scripts execute inside it beyond the extension's own packaged code.
 
 **Justification for storage**
 
@@ -149,15 +149,17 @@ Developer Program Policies certification, then Save Draft and Submit.
 
 **Justification for remote code use**
 
-> YouTube signs its media URLs with an obfuscated JavaScript algorithm fetched from YouTube's own player endpoint. To decipher a stream URL for a video the user requested, this code must be executed. It runs only inside a dedicated sandboxed iframe whose CSP explicitly allows unsafe-eval (extension pages themselves never use it), executes only code fetched from YouTube's player, only on demand, and never executes third-party or developer-hosted code.
+> None — the package no longer contains or executes remote code. The prior
+> sandboxed evaluator (evaluator.html with unsafe-eval) was removed in v1.0.1.
+> In the privacy questionnaire answer **“Does your extension use remote
+> code?” = No.** YouTube stream URLs are deciphered through the bundled
+> client (PO-token/BotGuard), not by evaluating fetched player JS.
 
 **Also required (outside Privacy tab)**
 
 - Settings page: add a publisher contact email and verify it (Google emails a
   verification link). Publishing stays blocked until the email is verified.
 - Tick the certification that data usage complies with the Developer Program Policies.
-- Remote-code justification is the highest-risk item in review; if rejected,
-  the fix is to remove runtime execution of fetched player JS entirely.
 
 ## 6 · Test instructions (reviewer form)
 

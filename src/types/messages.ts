@@ -2,8 +2,8 @@
  * Cross-context message contracts.
  *
  * Contexts: popup (UI) -> background (service worker router) -> offscreen
- * (ffmpeg + stream fetch). The evaluator sandbox (evaluator.html) is separate
- * and speaks postMessage (YT_EVALUATOR_*), not runtime messages.
+ * (ffmpeg + stream fetch). All logic ships inside the package; no remote code
+ * is fetched or executed at runtime.
  */
 
 /** A normalized, playable stream format as returned by the background. */

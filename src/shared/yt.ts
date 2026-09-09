@@ -98,8 +98,7 @@ export function getYtSession(seed: SessionSeed): Promise<YtSession> {
 async function createYtSession(seed: SessionSeed): Promise<YtSession> {
   // Generate a local PO token seeded by the session key. When this fails we
   // fall back to session-local generation.
-  let poToken: string | undefined;
-  try {
+  let poToken: string | undefined;  try {
     poToken = await LocalToken(seed);
   } catch (error) {
     console.warn("PoToken fallback initialized:", error);
